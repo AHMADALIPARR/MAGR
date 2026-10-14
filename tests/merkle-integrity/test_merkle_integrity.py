@@ -356,6 +356,169 @@ class TestTamperDetection(unittest.TestCase):
                              "inverting every side flag must not verify")
 
 
+class TestOperationDescriptorInDAG(unittest.TestCase):
+    """
+    The case the MAGLE spec names explicitly:
+
+        "Detect altered operation descriptors."
+
+    This is the test that a Merkle provenance layer is most likely to be missing
+    and most likely to claim it has. Two ways to get it wrong:
+
+      1. Store the operation's digest but discard the canonical payload that
+         produced it. Verification can then only compare stored hashes against
+         stored hashes -- circular, and blind to any edit of the operation itself.
+      2. Mutate a *copy* of the payload, hash the copy, and compare. That
+         asserts only that SHA-256 is injective. The DAG was never touched and
+         verification was never re-run.
+
+    Both are tested against here.
+    """
+
+    def test_altered_operation_descriptor_is_detected_by_verify(self):
+        base_desc = {
+            "functor_id": "F_GEMM_F64_V1",
+            "flags": ["N", "N"],
+            "scalars": [{"alpha": 1.0}, {"beta": 0.0}],
+            "inputs": ["a", "b", "c"],
+        }
+        leaf = mm.leaf(mm.DOMAIN_OP, mm.commit_operation(base_desc))
+        other = mm.leaf(mm.DOMAIN_OP, mm.commit_output("f64", [4], b"\x00" * 32))
+        root = mm.root([leaf, other])
+
+        self.assertTrue(mm.verify(root), "baseline DAG must verify")
+
+        # Attacker edits the operation: flags N,N become T,T.
+        tampered = json.loads(json.dumps(base_desc))
+        tampered["flags"] = ["T", "T"]
+        leaf.payload = mm.commit_operation(tampered)
+
+        self.assertFalse(
+            mm.verify(root),
+            "an altered operation descriptor MUST be detected; if this passes, "
+            "verification is comparing stored hashes against stored hashes",
+        )
+
+    def test_altered_scalar_in_operation_is_detected(self):
+        """alpha 1.0 -> 2.0 is a one-field edit that changes the result.
+
+        This is the edit an attacker would actually make: not a wholesale
+        substitution, but a single coefficient.
+        """
+        base_desc = {"functor_id": "F_GEMM_F64_V1", "alpha": 1.0, "beta": 0.0}
+        leaf = mm.leaf(mm.DOMAIN_OP, mm.commit_operation(base_desc))
+        other = mm.leaf(mm.DOMAIN_OP, mm.commit_operation({"functor_id": "F_AXPY_F64_V1"}))
+        root = mm.root([leaf, other])
+        self.assertTrue(mm.verify(root))
+
+        tampered = dict(base_desc)
+        tampered["alpha"] = 2.0
+        leaf.payload = mm.commit_operation(tampered)
+        self.assertFalse(mm.verify(root), "changing alpha must be detected")
+
+    def test_mutating_a_copy_does_not_prove_anything(self):
+        """The anti-test for the `magr_dag_detect_tamper` pattern.
+
+        Hashing a mutated COPY of the payload and comparing against the stored
+        digest returns True no matter how broken the DAG is -- including if
+        verify() is completely broken. Demonstrating that here is what makes the
+        real test above meaningful rather than decorative.
+        """
+        leaf = mm.leaf(mm.DOMAIN_INPUT, b"payload")
+        copy = bytearray(leaf.payload)
+        copy[0] ^= 0xFF
+        self.assertNotEqual(
+            mm.hashlib.sha256(bytes(copy)).digest(),
+            leaf.digest,
+            "a mutated copy always hashes differently -- so this check passes "
+            "even with verification entirely absent",
+        )
+        # The DAG, untouched, still verifies. The copy test told us nothing.
+        self.assertTrue(mm.verify(leaf))
+
+    def test_operation_leaf_is_not_interchangeable_with_a_data_leaf(self):
+        """Domain separation is what stops an operation commitment being
+        replayed as a data commitment."""
+        payload = b"same bytes"
+        op = mm.leaf(mm.DOMAIN_OP, payload)
+        data = mm.leaf(mm.DOMAIN_INPUT, payload)
+        self.assertNotEqual(op.digest, data.digest)
+        self.assertNotEqual(op.digest, mm.leaf(mm.DOMAIN_OUTPUT, payload).digest)
+
+        # And a leaf's digest cannot be smuggled in as an internal node's child.
+        internal = mm.node_pair(data, data)
+        self.assertNotEqual(internal.digest, op.digest)
+
+
+class TestManifestReproducibility(unittest.TestCase):
+    """The reproducible/volatile split.
+
+    A field that would differ between two runs of the same program on the same
+    binary must not change the reproducible digest. If it does, the manifest
+    mechanism is decorative: no replay ever matches.
+    """
+
+    def _manifest(self, **over):
+        m = {
+            "magr_abi": "1.0.0",
+            "wrapper_version": "1.0.0",
+            "blas_revision": "3.12.0",
+            "compiler": "GNU Fortran 13.2.0",
+            "fp_contract_disabled": True,
+            "source_lang": "c",
+            "functors": ["F_GEMM_F64_V1", "F_DOT_F64_V1"],
+            "volatile": {},
+        }
+        m.update(over)
+        return m
+
+    def _reproducible(self, m):
+        """The reproducible region, committed under its own domain."""
+        core = {k: v for k, v in m.items() if k != "volatile"}
+        return mm.commit_manifest(core)
+
+    def test_volatile_fields_do_not_change_the_reproducible_digest(self):
+        base = self._manifest()
+        moved = self._manifest(volatile={"run_id": "abc-123", "wall_clock_utc": "2026-10-13T12:00:00Z"})
+        self.assertEqual(
+            self._reproducible(base),
+            self._reproducible(moved),
+            "a run id and a timestamp are properties of the RUN, not the BUILD",
+        )
+
+    def test_volatile_fields_do_change_the_full_digest(self):
+        """...but they are still committed, so a replay cannot quietly swap them."""
+        base = self._manifest()
+        moved = self._manifest(volatile={"run_id": "abc-123"})
+        self.assertNotEqual(mm.commit_manifest(base), mm.commit_manifest(moved))
+
+    def test_build_fields_do_change_the_reproducible_digest(self):
+        for field, value in [
+            ("blas_revision", "3.13.0"),
+            ("compiler", "GNU Fortran 14.0.0"),
+            ("fp_contract_disabled", False),
+            ("wrapper_version", "1.0.1"),
+        ]:
+            self.assertNotEqual(
+                self._reproducible(self._manifest()),
+                self._reproducible(self._manifest(**{field: value})),
+                f"{field} is a property of the build and must be committed",
+            )
+
+    def test_fp_contract_state_three_ways(self):
+        """`true`, `false`, and `not recorded` are three different facts.
+
+        A boolean flag cannot distinguish "contraction was off" from "nobody
+        looked", and a manifest that conflates them will claim reproducibility
+        it cannot promise.
+        """
+        d_on = self._reproducible(self._manifest(fp_contract_disabled=True))
+        d_off = self._reproducible(self._manifest(fp_contract_disabled=False))
+        d_unknown = self._reproducible({"magr_abi": "1.0.0", "functors": [],
+                                        "fp_contract_disabled": None})
+        self.assertEqual(len({d_on, d_off, d_unknown}), 3)
+
+
 class TestExecutionManifestCommitment(unittest.TestCase):
     def test_manifest_commitment_detects_field_changes(self):
         manifest = {

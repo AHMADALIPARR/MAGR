@@ -11,12 +11,17 @@ CMake, and no Chapel, Klong, or Uiua**.
 
 | Suite | Command | Result |
 |---|---|---|
-| Merkle integrity & canonical encoding (reference impl.) | `python tests/merkle-integrity/test_merkle_integrity.py` | **34 / 34 pass** |
+| Merkle integrity & canonical encoding (reference impl.) | `python tests/merkle-integrity/test_merkle_integrity.py` | **42 / 42 pass** |
 | Descriptor cross-check | `python tools/check_descriptors.py` | **200 / 200 checks pass** |
 | Upstream source digest verification | (inside the above) | **8 / 8 digests match** Netlib BLAS 3.12.0 |
 
 That is the complete list. Those are the only results this repository has
 produced.
+
+The suite grew from 34 to 42 tests after the Phase 4 audit. The eight new ones
+cover **altered operation descriptors**, the case the spec names explicitly and
+the case that both the existing implementation and the Phase 4 patch failed to
+actually test. See `docs/INTEGRATION-PHASE4.md` §3.3 and §3.4.
 
 ## What has NOT been executed
 
@@ -53,7 +58,7 @@ Full detail with reasoning in `docs/INTEGRATION-NOVA.md`.
    check either, so a bad `LDA` is a silent out-of-bounds write. Now checked in
    `magr_array_as_blas_matrix` / `_as_blas_vector` before every Fortran call.
 3. **Node ids used where value ids were expected.** The patch's own tests passed
-   only because const node ids and value indices coincided by accident. The
+   only because const node ids happened to coincide with value indices. The
    canonical IR separates the two spaces and makes the confusion unrepresentable.
 4. **Forward-reference validation gated on node kind**, so const and view nodes
    with forward references slipped through. The canonical check is uniform.
@@ -63,6 +68,43 @@ Full detail with reasoning in `docs/INTEGRATION-NOVA.md`.
    which requires an explicit callback and reports how many nodes it launched.
 6. **Two ABIs with the same symbol names.** Not merged; one canonical ABI was
    chosen and the patch's implementation logic ported onto it.
+
+## Phase 4 (Merkle DAG) patch — audit in `docs/INTEGRATION-PHASE4.md`
+
+Submitted with `Status: COMPLETE`. That status is not accurate. The most
+serious findings:
+
+1. **No domain separation.** Every hash is a bare `SHA-256`. An operation
+   commitment, an array-metadata commitment, and a data commitment are
+   indistinguishable objects, so an output commitment can be replayed as an
+   input commitment and a data leaf can be relabelled as an internal node.
+2. **`magr_dag_verify_node` returns `true` for OP and META nodes**, because the
+   canonical payload was discarded after hashing. Verification is circular: it
+   checks stored hashes against stored hashes. **"Detect altered operation
+   descriptors" — an explicit spec requirement — therefore does not work**, and
+   no submitted test covers it.
+3. **`magr_dag_detect_tamper` never tampers.** It flips a byte of a *copy* and
+   hashes that, asserting only that SHA-256 is injective. It would pass against
+   a completely broken DAG.
+4. **Signed zero and NaN payloads are preserved**, which the submitted test
+   reports as a *pass*. It makes the root a function of how the CPU behaved
+   rather than of what the program computed, so two runs of the same program can
+   disagree.
+5. **`MAGR_MERKLE_MAX_CHILDREN = 16` silently drops the entire operation group**
+   from any graph with more than 16 operations, while still returning `MAGR_OK`.
+6. **`magr_hash_array_data` commits to the wrong bytes for a strided rank-1
+   view**, so `x[0::2]` and `x[0:4]` produce the same commitment.
+7. **`-lcrypto` couples the trust anchor to OpenSSL.** A defensible choice, but
+   it changes the claim from "verified here" to "as trustworthy as OpenSSL's
+   build".
+
+Adopted from it: the execution-manifest field set (the weakest part of the
+existing design), the Ed25519-as-explicit-stub decision, standalone root
+reconstruction, and — most usefully — three test *intents* that turned out to be
+genuine gaps here too. Those are now the eight new tests above.
+
+Reported `34/34` Merkle tests: counting the `check()` calls in the supplied test
+bodies gives 33.
 
 ## Errors caught while writing this repository's own tests
 

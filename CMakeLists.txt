@@ -157,10 +157,15 @@ target_include_directories(magr_adapters PUBLIC
 )
 target_link_libraries(magr_adapters PUBLIC magr_fortran_wrappers)
 
+add_library(magr_manifest STATIC execution-manifest/src/manifest.c)
+target_include_directories(magr_manifest PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/execution-manifest/include)
+target_link_libraries(magr_manifest PUBLIC magr_merkle)
+
 add_library(magr_execute STATIC chapel-runtime/src/magr_execute.c)
 target_include_directories(magr_execute PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/chapel-runtime/include)
-target_link_libraries(magr_execute PUBLIC magr_adapters Threads::Threads)
+target_link_libraries(magr_execute PUBLIC magr_adapters magr_manifest Threads::Threads)
 
 if(MAGR_WITH_ED25519)
   target_compile_definitions(magr_merkle PUBLIC MAGR_ENABLE_ED25519)
