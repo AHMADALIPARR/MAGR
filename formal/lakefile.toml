@@ -1,0 +1,10 @@
+name = "magr_formal"
+version = "0.1.0"
+defaultTargets = ["MagrFormal"]
+
+[[lean_lib]]
+name = "MagrFormal"
+
+# No dependencies. Everything here is Lean 4 core plus Std, deliberately: a
+# formal layer that needs Mathlib to build is a formal layer that will not build
+# on the machine that needs to check it.

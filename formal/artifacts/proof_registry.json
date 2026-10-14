@@ -1,0 +1,253 @@
+{
+  "registry_version": "1.0.0",
+  "generated_by": "tools/gen_proof_registry.py",
+  "generated_utc": "2026-10-14T01:21:24Z",
+  "formal_version": "0.1.0",
+  "lean_toolchain_pinned": "leanprover/lean4:v4.19.0",
+  "abi_version": "1.0.0",
+  "ir_version": "1.0.0",
+  "merkle_version": "1.0.0",
+  "disclaimer": "Content-addressed inventory of the theorems proved for MAGR's formal model. It does NOT establish that any compiled binary (libmagr_blas.a, the C wrappers, the Chapel runtime) conforms to the model. Proofs are over exact rationals; the runtime is IEEE-754 binary64, so no theorem here transfers bit-for-bit. See formal/MagrFormal/Disclaimer.lean.",
+  "build": {
+    "status": "NOT BUILT: no Lean toolchain on PATH when this registry was generated. No .olean digests are recorded and none are claimed. Every theorem below is present in source; none has been proved by this repository.",
+    "toolchain_found": null,
+    "toolchain_path": null,
+    "command": "cd formal && lake build",
+    "olean_digests_recorded": false
+  },
+  "digest_semantics": {
+    "source_sha256": "sha256 of the .lean file. Stable identity of the statement plus proof text. THIS is the digest an execution manifest should cite.",
+    "olean_sha256": "sha256 of a compiled .olean. Depends on the Lean version, the elan toolchain path, and the build directory, so it changes without the mathematics changing. Build evidence only, never proof identity. Absent when not built."
+  },
+  "counts": {
+    "total": 28,
+    "model": 25,
+    "plumbing": 3
+  },
+  "theorems": [
+    {
+      "name": "MagrFormal.ArrayModel.colMajor_bytes_matrix",
+      "kind": "theorem",
+      "source": "MagrFormal/ArrayModel.lean",
+      "source_sha256": "b240a007eede65f02f4cd8f37079a47931ca324f8a52cd09aed968fb7af522e8",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.ArrayModel.colMajor_bytes_vector",
+      "kind": "theorem",
+      "source": "MagrFormal/ArrayModel.lean",
+      "source_sha256": "b240a007eede65f02f4cd8f37079a47931ca324f8a52cd09aed968fb7af522e8",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.ArrayModel.colMajor_length",
+      "kind": "theorem",
+      "source": "MagrFormal/ArrayModel.lean",
+      "source_sha256": "b240a007eede65f02f4cd8f37079a47931ca324f8a52cd09aed968fb7af522e8",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.ArrayModel.leadingDim_matrix",
+      "kind": "theorem",
+      "source": "MagrFormal/ArrayModel.lean",
+      "source_sha256": "b240a007eede65f02f4cd8f37079a47931ca324f8a52cd09aed968fb7af522e8",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.ArrayModel.nelems_rank0",
+      "kind": "theorem",
+      "source": "MagrFormal/ArrayModel.lean",
+      "source_sha256": "b240a007eede65f02f4cd8f37079a47931ca324f8a52cd09aed968fb7af522e8",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.ArrayModel.nelems_zero_of_mem_zero",
+      "kind": "theorem",
+      "source": "MagrFormal/ArrayModel.lean",
+      "source_sha256": "b240a007eede65f02f4cd8f37079a47931ca324f8a52cd09aed968fb7af522e8",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Axpy.axpy_cons",
+      "kind": "theorem",
+      "source": "MagrFormal/Axpy.lean",
+      "source_sha256": "fccaf299933dd0ce33a69c0e2c977a5e59e9393704d09f57dc0a5b5fced98749",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Axpy.axpy_fusion",
+      "kind": "theorem",
+      "source": "MagrFormal/Axpy.lean",
+      "source_sha256": "fccaf299933dd0ce33a69c0e2c977a5e59e9393704d09f57dc0a5b5fced98749",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Axpy.axpy_length",
+      "kind": "theorem",
+      "source": "MagrFormal/Axpy.lean",
+      "source_sha256": "fccaf299933dd0ce33a69c0e2c977a5e59e9393704d09f57dc0a5b5fced98749",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Axpy.axpy_one",
+      "kind": "theorem",
+      "source": "MagrFormal/Axpy.lean",
+      "source_sha256": "fccaf299933dd0ce33a69c0e2c977a5e59e9393704d09f57dc0a5b5fced98749",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Axpy.axpy_zero",
+      "kind": "theorem",
+      "source": "MagrFormal/Axpy.lean",
+      "source_sha256": "fccaf299933dd0ce33a69c0e2c977a5e59e9393704d09f57dc0a5b5fced98749",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.dot_comm",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.dot_cons",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.dot_nil_nil",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.dot_singleton",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.dot_smul_left",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.dot_zero_left",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.DotProduct.map_length",
+      "kind": "theorem",
+      "source": "MagrFormal/DotProduct.lean",
+      "source_sha256": "a86d93b840a27fdb7471c46dddebf09d8c767e4e6e82ee45f89975266ef3a3ff",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.MerkleLink.axpy_fusion_recorded",
+      "kind": "theorem",
+      "source": "MagrFormal/MerkleLink.lean",
+      "source_sha256": "d174230fab9a4ef329f9bd0e18e1bb00dd97fb4f2a3364d7e979af2c5034babd",
+      "olean_sha256": null,
+      "category": "plumbing"
+    },
+    {
+      "name": "MagrFormal.MerkleLink.phase6_theorems_dedup",
+      "kind": "theorem",
+      "source": "MagrFormal/MerkleLink.lean",
+      "source_sha256": "d174230fab9a4ef329f9bd0e18e1bb00dd97fb4f2a3364d7e979af2c5034babd",
+      "olean_sha256": null,
+      "category": "plumbing"
+    },
+    {
+      "name": "MagrFormal.MerkleLink.phase6_theorems_nonempty",
+      "kind": "theorem",
+      "source": "MagrFormal/MerkleLink.lean",
+      "source_sha256": "d174230fab9a4ef329f9bd0e18e1bb00dd97fb4f2a3364d7e979af2c5034babd",
+      "olean_sha256": null,
+      "category": "plumbing"
+    },
+    {
+      "name": "MagrFormal.Norm.sumSquares_cons",
+      "kind": "theorem",
+      "source": "MagrFormal/Norm.lean",
+      "source_sha256": "e88341404b2ca0af499ab6e8c4046965c21c1df59f8cfce921fc06a1aada958b",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Norm.sumSquares_eq_dot_self",
+      "kind": "theorem",
+      "source": "MagrFormal/Norm.lean",
+      "source_sha256": "e88341404b2ca0af499ab6e8c4046965c21c1df59f8cfce921fc06a1aada958b",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Norm.sumSquares_nil",
+      "kind": "theorem",
+      "source": "MagrFormal/Norm.lean",
+      "source_sha256": "e88341404b2ca0af499ab6e8c4046965c21c1df59f8cfce921fc06a1aada958b",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Norm.sumSquares_smul",
+      "kind": "theorem",
+      "source": "MagrFormal/Norm.lean",
+      "source_sha256": "e88341404b2ca0af499ab6e8c4046965c21c1df59f8cfce921fc06a1aada958b",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.Norm.sumSquares_smul_eq_dot",
+      "kind": "theorem",
+      "source": "MagrFormal/Norm.lean",
+      "source_sha256": "e88341404b2ca0af499ab6e8c4046965c21c1df59f8cfce921fc06a1aada958b",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.formal_model_scope",
+      "kind": "theorem",
+      "source": "MagrFormal/Disclaimer.lean",
+      "source_sha256": "090ab9c8d70a8d060a8214bca87e271d75a3fcc6dc9ecd050d983da493be3a63",
+      "olean_sha256": null,
+      "category": "model"
+    },
+    {
+      "name": "MagrFormal.proof_is_not_conformance",
+      "kind": "theorem",
+      "source": "MagrFormal/Disclaimer.lean",
+      "source_sha256": "090ab9c8d70a8d060a8214bca87e271d75a3fcc6dc9ecd050d983da493be3a63",
+      "olean_sha256": null,
+      "category": "model"
+    }
+  ]
+}

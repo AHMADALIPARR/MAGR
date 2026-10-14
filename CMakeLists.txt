@@ -198,6 +198,35 @@ if(Python3_Interpreter_FOUND)
   add_test(NAME test_merkle_reference
            COMMAND ${Python3_EXECUTABLE}
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/merkle-integrity/test_merkle_integrity.py)
+
+  # The proof registry is GENERATED. These two cross-check it against the Lean
+  # sources in both directions, recompute every source digest, and refuse to
+  # accept an .olean digest while no Lean toolchain is present. A formal claim
+  # that cannot be checked against the source it claims to describe is
+  # decoration.
+  add_test(NAME test_proof_registry
+           COMMAND ${Python3_EXECUTABLE}
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_proof_registry.py)
+  add_test(NAME test_descriptors
+           COMMAND ${Python3_EXECUTABLE}
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_descriptors.py)
+endif()
+
+# The Lean formal model. Optional and off by default: it needs elan, and its
+# absence must not block building or testing everything else. When the toolchain
+# IS present, the registry records .olean digests; when it is not, the registry
+# says NOT BUILT and claims nothing.
+option(MAGR_WITH_LEAN "Build the Lean 4 formal model" OFF)
+if(MAGR_WITH_LEAN)
+  find_program(MAGR_LAKE lake)
+  if(MAGR_LAKE)
+    add_test(NAME formal_lean_build
+             COMMAND ${MAGR_LAKE} build
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/formal)
+  else()
+    message(WARNING "MAGR_WITH_LEAN=ON but no 'lake' on PATH; the formal model "
+                    "will not be built and the registry will record NOT BUILT.")
+  endif()
 endif()
 
 # ---------------------------------------------------------------- Summary
