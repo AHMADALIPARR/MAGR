@@ -1,3 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 MAGR contributors
+#
+# This file is part of MAGR (Merkle Array Graph Runtime).
+#
+# MAGR is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, version 3.
+#
+# MAGR is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public
+# License along with MAGR. If not, see <https://www.gnu.org/licenses/>.
+#
+# Note for AGPL section 13: MAGR is designed to be used over a
+# network. If you run a modified version as a service, section 13
+# requires you to offer those users the corresponding source of
+# your modified version. See docs/licensing.md.
+
 #!/usr/bin/env python3
 """
 Cross-checks the descriptor set against itself and against the vendored source.
@@ -71,6 +93,31 @@ def sha256_file(path: str) -> str:
         for chunk in iter(lambda: fh.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def find_backend_artifact() -> str | None:
+    """Locate the compiled numerical backend, if a build has produced one.
+
+    Returns None when nothing has been built, which is the current state. The
+    descriptor check then requires every binary.digest to be null -- the honest
+    representation of "we have not compiled this".
+    """
+    for rel in (
+        os.path.join("build", "fortran_fortran", "libmagr_fortran.a"),
+        os.path.join("build", "fortran-functors", "libmagr_fortran.a"),
+        os.path.join("build", "libmagr_fortran.a"),
+        os.path.join("fortran-functors", "lib", "libmagr_fortran.a"),
+    ):
+        p = os.path.join(REPO, rel)
+        if os.path.isfile(p):
+            return p
+    build_dir = os.path.join(REPO, "build")
+    if os.path.isdir(build_dir):
+        for dirpath, _dirs, files in os.walk(build_dir):
+            for fn in files:
+                if fn.endswith(".a") and "fortran" in fn:
+                    return os.path.join(dirpath, fn)
+    return None
 
 
 def main() -> int:
@@ -151,7 +198,13 @@ def main() -> int:
                 f"{short}: functors.json source_digest {declared[:16]}... != actual {actual[:16]}...",
             )
 
-        # 3. honesty about what has not been established
+        # 3. honesty about what has not been established.
+        #
+        # `binary.digest` has two legal states: null, or the sha256 of the
+        # artefact that is actually on disk. Anything else -- a hand-typed
+        # constant, a digest copied from another build, a value that does not
+        # match the file -- is a descriptor that confidently states something
+        # false, which is worse than one that admits ignorance.
         check(
             isinstance(d.get("semantics"), str) and len(d["semantics"]) > 20,
             f"{short}: must state a semantics contract",
@@ -164,17 +217,36 @@ def main() -> int:
             isinstance(d.get("postconditions"), list) and len(d["postconditions"]) > 0,
             f"{short}: must state postconditions",
         )
-        check(
-            d["binary"]["digest"] is None,
-            f"{short}: binary.digest must be null until a real artifact is hashed, not {d['binary']['digest']}",
-        )
+
+        backend = find_backend_artifact()
+        declared = d["binary"]["digest"]
+        if declared is None:
+            check(
+                "pending" in d["binary"]["digest_status"],
+                f"{short}: a null binary.digest must say why it is null",
+            )
+        else:
+            if not check(
+                backend is not None,
+                f"{short}: binary.digest is set but no compiled backend exists on "
+                f"disk to back it",
+            ):
+                pass
+            elif check(
+                declared == sha256_file(backend),
+                f"{short}: binary.digest does not match {os.path.relpath(backend, REPO)}",
+            ):
+                print(
+                    f"  {short:<18} binary digest verified against "
+                    f"{os.path.relpath(backend, REPO)}"
+                )
+
+        # Conformance results are different in kind: they may only be filled in
+        # by a test run. A build must never write this field.
         check(
             d["conformance"]["results"] is None,
-            f"{short}: conformance.results must be null until the tests have actually run",
-        )
-        check(
-            "pending" in d["binary"]["digest_status"],
-            f"{short}: binary.digest_status must say why it is null",
+            f"{short}: conformance.results must be null until the tests have "
+            f"actually run; a build cannot establish this",
         )
         check(
             "pending" in d["conformance"]["results_status"],
