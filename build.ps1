@@ -147,7 +147,7 @@ Say ""
 if ($testExit -eq 0) {
     Say "All registered tests passed." "Green"
     Say "Reminder: passing tests establish the properties those tests assert."
-    Say "It does not make this a verified numerical runtime -- see STATUS.md" "DarkGray"
+    Say "It does not make this a verified numerical runtime" "DarkGray"
 } else {
     Say "Some tests FAILED. See the output above." "Red"
 }

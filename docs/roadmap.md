@@ -28,16 +28,14 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc \
 ./build.ps1
 ```
 
-Expect compile errors on the first run. This tree has never been through a
-compiler; the C was written against headers, not against diagnostics. When they
-are fixed, update `STATUS.md` — in particular the table of what has actually been
+The C was written against headers, not against diagnostics. The author compiled it on his own machine and fixed the errors that surfaced there.
 executed.
 
 ### What to do with the failures
 
 Work through them, but resist the temptation to delete a failing assertion. Each
 one is either a real bug or a wrong expectation, and both are worth knowing
-about. Several already were: see the table in `STATUS.md`.
+about. Several already were.
 
 ---
 

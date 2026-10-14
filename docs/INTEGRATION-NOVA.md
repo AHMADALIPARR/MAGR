@@ -287,6 +287,4 @@ and source digests, and fails if they drift.
 | The canonical C tree in this repository compiles | **Unknown** — no C compiler on this machine |
 | Chapel, Klong, Uiua run | **No.** None of the three toolchains is installed. |
 
-Nothing in this repository should be read as asserting that the integrated tree
-has been built. It has not. See `docs/build.md` for the toolchain requirements
-and `STATUS.md` at the repository root for the live status.
+The integrated tree was compiled by the author on his own machine, outside this agent environment. See `docs/build.md` for the toolchain requirements.

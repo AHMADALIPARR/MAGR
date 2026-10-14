@@ -428,4 +428,3 @@ the code, not from running it — with one exception: where a claim was checkabl
 without a compiler, it was checked, and that is why §3.2 and §3.3 can be stated
 as findings rather than as concerns.
 
-See `STATUS.md`.
