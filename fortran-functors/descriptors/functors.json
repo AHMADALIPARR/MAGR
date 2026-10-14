@@ -1,0 +1,108 @@
+{
+  "_provenance": {
+    "_comment": "Preserved verbatim from the Phase 1-3 patch supplied externally. Kept as a record of what that build reported about itself. It is NOT the canonical descriptor set -- see ../descriptors/*.json, one file per functor, which carry preconditions, postconditions, quick-return behaviour, singular-matrix policy, aliasing policy and thread safety.",
+    "origin": "Phase 1-3 patch, supplied as pasted file contents (not an archive or a diff)",
+    "retained_by": "docs/INTEGRATION-NOVA.md",
+    "verification_status": "The eight source_digest values below were independently recomputed against the Netlib BLAS 3.12.0 archive vendored at fortran-functors/upstream/blas/ and ALL EIGHT MATCHED. See docs/INTEGRATION-NOVA.md section 1.",
+    "unverified": [
+      "binary_digest_sha256 2627f29ba0a840f89da4a190d4d3849fd26d299b5ed303747a0ad95334806de3 refers to fortran-functors/lib/libmagr_blas.a, an artifact that was NOT supplied and does not exist in this repository. It is recorded here as a claim and is null in every canonical descriptor.",
+      "conformance_result '28 passed, 0 failed' was produced on a machine that is not this one. It is a claim, not a result of this repository's test suite.",
+      "The compiler identity and build flags were not independently confirmed."
+    ]
+  },
+  "abi_version": "1.0.0",
+  "source_project": "Netlib BLAS",
+  "source_version": "3.12.0",
+  "source_url": "https://www.netlib.org/blas/blas.tgz",
+  "license": "Public domain (Netlib)",
+  "compiler": "GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "build_flags": "-O2 -fPIC -std=legacy (for .f); -O2 -fPIC (for .f90)",
+  "binary_digest_sha256": "2627f29ba0a840f89da4a190d4d3849fd26d299b5ed303747a0ad95334806de3",
+  "binary_path": "fortran-functors/lib/libmagr_blas.a",
+  "matrix_storage": "column-major",
+  "conformance_test": "tests/fortran-conformance/test_blas",
+  "conformance_result": "28 passed, 0 failed",
+  "functors": [
+    {
+      "id": "F_DOT_F64",
+      "fortran": "DDOT",
+      "symbol": "ddot_",
+      "level": 1,
+      "inputs": ["n:int", "x:f64*", "incx:int", "y:f64*", "incy:int"],
+      "output": "f64",
+      "contract": "Double-precision dot product: sum_i x[i]*y[i]",
+      "source_digest": "8983346c864ecb34ef9da011a5d141c68a7329d9bc71fceb5acf2c1949b5bb4f"
+    },
+    {
+      "id": "F_AXPY_F64",
+      "fortran": "DAXPY",
+      "symbol": "daxpy_",
+      "level": 1,
+      "inputs": ["n:int", "alpha:f64", "x:f64*", "incx:int", "y:f64*", "incy:int"],
+      "output": "y (in-place)",
+      "contract": "y := alpha*x + y",
+      "source_digest": "6d978fe749ad22249d05a230b9c0ba07e6afccbcc59b746f198e285487811af1"
+    },
+    {
+      "id": "F_NRM2_F64",
+      "fortran": "DNRM2",
+      "symbol": "dnrm2_",
+      "level": 1,
+      "inputs": ["n:int", "x:f64*", "incx:int"],
+      "output": "f64",
+      "contract": "Euclidean norm sqrt(sum x[i]^2)",
+      "source_digest": "2a5bc5ec9ab8077da1f81e2169a3868df1629e39f36ba969ada1f491a3b94979",
+      "note": "Source is dnrm2.f90 in BLAS 3.12.0"
+    },
+    {
+      "id": "F_GEMV_F64",
+      "fortran": "DGEMV",
+      "symbol": "dgemv_",
+      "level": 2,
+      "inputs": ["trans:char", "m:int", "n:int", "alpha:f64", "a:f64*", "lda:int", "x:f64*", "incx:int", "beta:f64", "y:f64*", "incy:int"],
+      "output": "y (in-place)",
+      "contract": "y := alpha*op(A)*x + beta*y; op=N or T",
+      "source_digest": "2320b9024e296f2a78882dd84c1b96be0af985dc177f2f373cb122f86f5d925d"
+    },
+    {
+      "id": "F_GEMM_F64",
+      "fortran": "DGEMM",
+      "symbol": "dgemm_",
+      "level": 3,
+      "inputs": ["transa:char", "transb:char", "m:int", "n:int", "k:int", "alpha:f64", "a:f64*", "lda:int", "b:f64*", "ldb:int", "beta:f64", "c:f64*", "ldc:int"],
+      "output": "c (in-place)",
+      "contract": "C := alpha*op(A)*op(B) + beta*C",
+      "source_digest": "aa22f67c2c3ef9b0b0cf42fcd6c4080076948d5f4b8b4d982a78eb6e33f9e191"
+    },
+    {
+      "id": "F_GER_F64",
+      "fortran": "DGER",
+      "symbol": "dger_",
+      "level": 2,
+      "inputs": ["m:int", "n:int", "alpha:f64", "x:f64*", "incx:int", "y:f64*", "incy:int", "a:f64*", "lda:int"],
+      "output": "a (in-place)",
+      "contract": "A := alpha*x*y^T + A",
+      "source_digest": "6da9a924d4eed5fca0ea42d34237c2ff8b75296ce17bcacfd2b9a829a9e47f4f"
+    },
+    {
+      "id": "F_TRSV_F64",
+      "fortran": "DTRSV",
+      "symbol": "dtrsv_",
+      "level": 2,
+      "inputs": ["uplo:char", "trans:char", "diag:char", "n:int", "a:f64*", "lda:int", "x:f64*", "incx:int"],
+      "output": "x (in-place)",
+      "contract": "Solve op(A)*x = b where A is triangular",
+      "source_digest": "f111927caedd1f2cdde08948fdf3ed21df26b99b1d7265dd5435028a60c661f6"
+    },
+    {
+      "id": "F_TRSM_F64",
+      "fortran": "DTRSM",
+      "symbol": "dtrsm_",
+      "level": 3,
+      "inputs": ["side:char", "uplo:char", "transa:char", "diag:char", "m:int", "n:int", "alpha:f64", "a:f64*", "lda:int", "b:f64*", "ldb:int"],
+      "output": "b (in-place)",
+      "contract": "Solve op(A)*X = alpha*B or X*op(A) = alpha*B",
+      "source_digest": "08dd17ab70986fabda036ed11bcb1a0892cceeb69cd2c28d7dd0a37c49c1d560"
+    }
+  ]
+}

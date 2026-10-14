@@ -1,0 +1,88 @@
+{
+  "descriptor_version": "1.0.0",
+  "functor_id": "F_DOT_F64_V1",
+  "abi": {
+    "abi_major": 1,
+    "abi_minor": 0,
+    "abi_version_string": "1.0.0",
+    "wrapper_version": "1.0.0",
+    "wrapper_source": "fortran-functors/src/magr_fortran.c",
+    "calling_convention": "cdecl",
+    "fortran_name_suffix": "_",
+    "fortran_hidden_char_len_type": "size_t",
+    "fortran_integer_kind": "int32"
+  },
+  "upstream": {
+    "project": "Netlib Reference BLAS (Basic Linear Algebra Subprograms)",
+    "version": "3.12.0",
+    "revision": "3.12.0",
+    "fortran_routine": "DDOT",
+    "source_file": "fortran-functors/upstream/blas/ddot.f",
+    "archive_url": "https://www.netlib.org/blas/blas.tgz",
+    "archive_sha256": "CCC41B5D088E50DB0030317AE9B0C9AF375710C1392ACAD1FE209602DA5A5AAD",
+    "source_sha256": null,
+    "source_sha256_status": "pending: filled in by tools/verify_upstream.ps1 at build time",
+    "modified_locally": false,
+    "license": "Netlib reference BLAS; freely redistributable, credit required, modifications must be renamed and commented",
+    "license_url": "https://www.netlib.org/blas/",
+    "license_acknowledgment": "Based upon work supported by NSF Grant ASC-9313958 and DOE Grant DE-FG03-94ER25219."
+  },
+  "signature": {
+    "result": "double",
+    "fortran": "DOUBLE PRECISION FUNCTION DDOT(N,DX,INCX,DY,INCY)"
+  },
+  "semantics": "result := sum over i in [0,N) of DX[i*INCX]*DY[i*INCY]",
+  "arguments": [
+    {"position": 1, "name": "N", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 2, "name": "DX", "c_type": "const double*", "kind": "array", "role": "input", "dtype": "f64"},
+    {"position": 3, "name": "INCX", "c_type": "const int32_t*", "kind": "scalar_stride"},
+    {"position": 4, "name": "DY", "c_type": "const double*", "kind": "input", "role": "input", "dtype": "f64"},
+    {"position": 5, "name": "INCY", "c_type": "const int32_t*", "kind": "scalar_stride"}
+  ],
+  "shape_rules": {
+    "DX": ["N"],
+    "DY": ["N"],
+    "lengths_must_match": true,
+    "increments": "INCX >= 1 and INCY >= 1. Negative increments are rejected by MAGR (MAGR_STATUS_STRIDE_UNSUPPORTED) even though upstream accepts them, so that Klong and Uiua lowering never depends on reversed traversal."
+  },
+  "quick_return": [
+    {"when": "N <= 0", "effect": "returns 0.0"}
+  ],
+  "storage_convention": "strided linear vector; element i is at byte offset i*INC*8 from the base pointer.",
+  "preconditions": [
+    "DX and DY are f64, rank 1, with positive byte strides divisible by 8.",
+    "Both have the same logical length N.",
+    "Declared capacity backs the full strided extent for both.",
+    "N fits in int32."
+  ],
+  "postconditions": [
+    "On OK, the double written to the out parameter equals the upstream result.",
+    "Inputs are unmodified.",
+    "No XERBLA call occurs."
+  ],
+  "aliasing": {
+    "allowed": true,
+    "note": "DX and DY may be the same memory. The result is then the sum of squares."
+  },
+  "thread_safety": "reentrant; no global state.",
+  "validation": {
+    "status_on_shape_error": "MAGR_STATUS_SHAPE_MISMATCH",
+    "status_on_stride_error": "MAGR_STATUS_STRIDE_UNSUPPORTED",
+    "status_on_dtype_error": "MAGR_STATUS_UNSUPPORTED"
+  },
+  "numerical_contract": {
+    "accumulation_order": "as implemented upstream (unrolled by 5 in ddot.f)",
+    "fma_contraction_in_wrapper": "none",
+    "reproducibility_note": "Summation order is fixed by ddot.f and therefore stable across conforming compilers, modulo FMA contraction inside the compiler-generated loop. Builds requiring bit-identity must pass -ffp-contract=off to the Fortran compiler."
+  },
+  "binary": {
+    "digest_algorithm": "sha256",
+    "digest": null,
+    "digest_status": "pending: requires an actual compiled object"
+  },
+  "conformance": {
+    "test_ids": ["FC_DOT_F64_BASIC", "FC_DOT_F64_STRIDED", "FC_DOT_F64_ZERO_LEN", "FC_DOT_F64_SINGLETON", "FC_DOT_F64_ALIASING", "AB_SCALAR_WIDTH"],
+    "results": null,
+    "results_status": "pending: requires execution"
+  }
+}

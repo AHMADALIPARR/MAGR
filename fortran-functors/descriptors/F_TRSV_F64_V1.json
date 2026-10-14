@@ -1,0 +1,98 @@
+{
+  "descriptor_version": "1.0.0",
+  "functor_id": "F_TRSV_F64_V1",
+  "abi": {
+    "abi_major": 1,
+    "abi_minor": 0,
+    "abi_version_string": "1.0.0",
+    "wrapper_version": "1.0.0",
+    "wrapper_source": "fortran-functors/src/magr_fortran.c",
+    "calling_convention": "cdecl",
+    "fortran_name_suffix": "_",
+    "fortran_hidden_char_len_type": "size_t",
+    "fortran_integer_kind": "int32"
+  },
+  "upstream": {
+    "project": "Netlib Reference BLAS (Basic Linear Algebra Subprograms)",
+    "version": "3.12.0",
+    "revision": "3.12.0",
+    "fortran_routine": "DTRSV",
+    "source_file": "fortran-functors/upstream/blas/dtrsv.f",
+    "archive_url": "https://www.netlib.org/blas/blas.tgz",
+    "archive_sha256": "CCC41B5D088E50DB0030317AE9B0C9AF375710C1392ACAD1FE209602DA5A5AAD",
+    "source_sha256": null,
+    "source_sha256_status": "pending: filled in by tools/verify_upstream.ps1 at build time",
+    "modified_locally": false,
+    "license": "Netlib reference BLAS; freely redistributable, credit required, modifications must be renamed and commented",
+    "license_url": "https://www.netlib.org/blas/",
+    "license_acknowledgment": "Based upon work supported by NSF Grant ASC-9313958 and DOE Grant DE-FG03-94ER25219."
+  },
+  "signature": {
+    "result": "void",
+    "fortran": "SUBROUTINE DTRSV(UPLO,TRANS,DIAG,N,A,LDA,X,INCX)"
+  },
+  "semantics": "X := op(TRANS)*A^-1 * X, in place, where op(TRANS)*A = A for UPLO='U', A^T for UPLO='L'.",
+  "arguments": [
+    {"position": 1, "name": "UPLO", "c_type": "const char*", "kind": "flag", "allowed": ["U","L"], "hidden_length_arg": true, "hidden_length_value": 1},
+    {"position": 2, "name": "TRANS", "c_type": "const char*", "kind": "flag", "allowed": ["N","T","C"], "hidden_length_arg": true, "hidden_length_value": 1},
+    {"position": 3, "name": "DIAG", "c_type": "const char*", "kind": "flag", "allowed": ["N","U"], "hidden_length_arg": true, "hidden_length_value": 1},
+    {"position": 4, "name": "N", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 5, "name": "A", "c_type": "const double*", "kind": "array", "role": "input", "layout": "column_major", "dtype": "f64"},
+    {"position": 6, "name": "LDA", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 7, "name": "X", "c_type": "double*", "kind": "array", "role": "inout", "dtype": "f64"},
+    {"position": 8, "name": "INCX", "c_type": "const int32_t*", "kind": "scalar_stride"}
+  ],
+  "shape_rules": {
+    "A": ["N", "N"],
+    "X": ["N"],
+    "leading_dimensions": {"LDA": "LDA >= max(1,N)"}
+  },
+  "quick_return": [
+    {"when": "N <= 0", "effect": "returns without modifying X"}
+  ],
+  "storage_convention": "column_major for A; strided linear for X.",
+  "singularity": {
+    "upstream_behaviour": "DTRSV divides by A(i,i) with no check. A zero diagonal entry yields infinities and NaNs, or a memory-safety problem only if LDA is also wrong.",
+    "magr_policy": "MAGR scans the diagonal first. If DIAG='N' and every diagonal entry is exactly zero (including negative zero), the call is refused with MAGR_STATUS_SINGULAR and X is left unmodified.",
+    "detection_is_partial": true,
+    "limitation": "A triangular matrix that is singular for some right-hand side while having a nonzero diagonal is not detected. MAGR does not claim otherwise. Callers needing a guarantee must use an explicit factorisation with a pivoting/condition check (see docs/roadmap.md).",
+    "after_the_call": "If a division still overflows or produces NaN despite a nonzero diagonal, MAGR does not rewrite the result. The caller inspects it under the call contract's tolerance policy."
+  },
+  "preconditions": [
+    "A is f64, rank 2, column_major, square, strides [8, LDA*8], not readonly.",
+    "X is an f64 rank-1 writable view of length N with positive stride.",
+    "Declared capacity of A backs LDA*N doubles.",
+    "The diagonal is not identically zero when DIAG='N' (checked by MAGR)."
+  ],
+  "postconditions": [
+    "On OK, X holds the solution of the triangular system to within the routine's documented arithmetic.",
+    "A is unmodified.",
+    "On MAGR_STATUS_SINGULAR, X is unmodified."
+  ],
+  "aliasing": {
+    "allowed": false,
+    "note": "X must not overlap A. DTRSV reads A(i,j) during the solve while X is being overwritten."
+  },
+  "thread_safety": "reentrant; no global state.",
+  "validation": {
+    "status_on_shape_error": "MAGR_STATUS_SHAPE_MISMATCH",
+    "status_on_stride_error": "MAGR_STATUS_STRIDE_UNSUPPORTED",
+    "status_on_dtype_error": "MAGR_STATUS_UNSUPPORTED",
+    "status_on_singular": "MAGR_STATUS_SINGULAR"
+  },
+  "numerical_contract": {
+    "accuracy": "Backward stable; growth factor bounded by n for a triangular solve.",
+    "fma_contraction_in_wrapper": "none",
+    "reproducibility_note": "Substitution order is fixed by dtrsv.f. Build with -ffp-contract=off for bit-identity."
+  },
+  "binary": {
+    "digest_algorithm": "sha256",
+    "digest": null,
+    "digest_status": "pending: requires an actual compiled object"
+  },
+  "conformance": {
+    "test_ids": ["FC_TRSV_F64_LOWER_UNIT", "FC_TRSV_F64_UPPER_NONUNIT", "FC_TRSV_F64_TRANSPOSE", "FC_TRSV_F64_ZERO_DIAG_REJECTED", "FC_TRSV_F64_ZERO_LEN", "FC_TRSV_F64_LD_GT_N", "FC_TRSV_F64_STRIDED_X", "AB_COLUMN_MAJOR"],
+    "results": null,
+    "results_status": "pending: requires execution"
+  }
+}

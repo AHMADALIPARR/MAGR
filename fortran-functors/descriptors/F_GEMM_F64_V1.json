@@ -1,0 +1,98 @@
+{
+  "descriptor_version": "1.0.0",
+  "functor_id": "F_GEMM_F64_V1",
+  "abi": {
+    "abi_major": 1,
+    "abi_minor": 0,
+    "abi_version_string": "1.0.0",
+    "wrapper_version": "1.0.0",
+    "wrapper_source": "fortran-functors/src/magr_fortran.c",
+    "calling_convention": "cdecl",
+    "fortran_name_suffix": "_",
+    "fortran_hidden_char_len_type": "size_t",
+    "fortran_integer_kind": "int32"
+  },
+  "upstream": {
+    "project": "Netlib Reference BLAS (Basic Linear Algebra Subprograms)",
+    "version": "3.12.0",
+    "revision": "3.12.0",
+    "fortran_routine": "DGEMM",
+    "source_file": "fortran-functors/upstream/blas/dgemm.f",
+    "archive_url": "https://www.netlib.org/blas/blas.tgz",
+    "archive_sha256": "CCC41B5D088E50DB0030317AE9B0C9AF375710C1392ACAD1FE209602DA5A5AAD",
+    "source_sha256": null,
+    "source_sha256_status": "pending: filled in by tools/verify_upstream.ps1 at build time",
+    "modified_locally": false,
+    "license": "Netlib reference BLAS; freely redistributable, credit required, modifications must be renamed and commented",
+    "license_url": "https://www.netlib.org/blas/",
+    "license_acknowledgment": "Based upon work supported by NSF Grant ASC-9313958 and DOE Grant DE-FG03-94ER25219."
+  },
+  "signature": {
+    "result": "void",
+    "fortran": "SUBROUTINE DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)"
+  },
+  "semantics": "C := alpha*op(TRANSA)*A*op(TRANSB)*B + beta*C, all column-major, alpha and beta as scalars.",
+  "arguments": [
+    {"position": 1, "name": "TRANSA", "c_type": "const char*", "kind": "flag", "allowed": ["N","T","C"], "hidden_length_arg": true, "hidden_length_value": 1},
+    {"position": 2, "name": "TRANSB", "c_type": "const char*", "kind": "flag", "allowed": ["N","T","C"], "hidden_length_arg": true, "hidden_length_value": 1},
+    {"position": 3, "name": "M", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 4, "name": "N", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 5, "name": "K", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 6, "name": "ALPHA", "c_type": "const double*", "kind": "scalar_value"},
+    {"position": 7, "name": "A", "c_type": "const double*", "kind": "array", "role": "input", "layout": "column_major", "dtype": "f64"},
+    {"position": 8, "name": "LDA", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 9, "name": "B", "c_type": "const double*", "kind": "array", "role": "input", "layout": "column_major", "dtype": "f64"},
+    {"position": 10, "name": "LDB", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 11, "name": "BETA", "c_type": "const double*", "kind": "scalar_value"},
+    {"position": 12, "name": "C", "c_type": "double*", "kind": "array", "role": "inout", "layout": "column_major", "dtype": "f64"},
+    {"position": 13, "name": "LDC", "c_type": "const int32_t*", "kind": "scalar_dim"}
+  ],
+  "shape_rules": {
+    "A": {"if_transa_N": "[M,K]", "if_transa_T": "[K,M]", "if_transa_C": "[K,M]"},
+    "B": {"if_transb_N": "[K,N]", "if_transb_T": "[N,K]", "if_transb_C": "[N,K]"},
+    "C": ["M", "N"],
+    "leading_dimensions": {"LDA": "LDA >= max(1,M)", "LDB": "LDB >= max(1,K)", "LDC": "LDC >= max(1,M)"},
+    "inner_dimensions_match": "op(A) inner dim == op(B) inner dim == K"
+  },
+  "quick_return": [
+    {"when": "M == 0 or N == 0 or (ALPHA == 0 and BETA == 1)", "effect": "returns without modifying C"}
+  ],
+  "storage_convention": "column_major; element (i,j) of an MxN matrix with leading dimension LD is at linear index i + j*LD (0-based).",
+  "preconditions": [
+    "A, B, C are f64, rank 2, layout column_major with strides [8, LDA*8].",
+    "Declared capacity of each matrix backs LDA*cols, LDB*cols, LDC*N doubles respectively.",
+    "C is writable, i.e. MAGR_ARRAY_F_READONLY is not set.",
+    "ALPHA and BETA are not NaN.",
+    "M, N, K, LDA, LDB, LDC all fit in int32."
+  ],
+  "postconditions": [
+    "On OK, C holds the mathematical result for the given inputs.",
+    "C's logical shape is unchanged.",
+    "No XERBLA call occurs: MAGR pre-validates every argument (see tests/abi/test_xerbla_probe.c)."
+  ],
+  "aliasing": {
+    "allowed": false,
+    "note": "DGEMM does not document behaviour when C aliases A or B. If a caller aliases, MAGR requires MAGR_ARRAY_F_MAY_ALIAS on the aliasing descriptor and the scheduler must serialise against it."
+  },
+  "thread_safety": "reentrant; safe to call concurrently on disjoint buffers. Upstream XERBLA is process-global and is never reached on a well-formed call.",
+  "validation": {
+    "status_on_shape_error": "MAGR_STATUS_SHAPE_MISMATCH",
+    "status_on_stride_error": "MAGR_STATUS_STRIDE_UNSUPPORTED",
+    "status_on_dtype_error": "MAGR_STATUS_UNSUPPORTED"
+  },
+  "numerical_contract": {
+    "accumulation_order": "as implemented upstream (unrolled blocked loops in dgemm.f)",
+    "fma_contraction_in_wrapper": "none; wrapper performs no arithmetic",
+    "reproducibility_note": "MAGR does not promise bit-identical results across BLAS revisions or compiler versions for GEMM. Cross-build reproducibility requires pinning the numerical backend recorded under upstream.version."
+  },
+  "binary": {
+    "digest_algorithm": "sha256",
+    "digest": null,
+    "digest_status": "pending: requires an actual compiled object; must be produced by tools/stamp_digests.ps1 from the artifact on disk"
+  },
+  "conformance": {
+    "test_ids": ["FC_GEMM_F64_BASIC", "FC_GEMM_F64_TRANSPOSE", "FC_GEMM_F64_ALPHA_BETA", "FC_GEMM_F64_LD_GT_M", "FC_GEMM_F64_K0", "FC_GEMM_F64_QUICK_RETURN", "AB_COLUMN_MAJOR"],
+    "results": null,
+    "results_status": "pending: requires execution; no result is claimed until the tests have actually run"
+  }
+}

@@ -1,0 +1,19 @@
+# Build output
+build/
+out/
+*.o
+*.a
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.mod
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+compile_commands.json

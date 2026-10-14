@@ -1,0 +1,90 @@
+{
+  "descriptor_version": "1.0.0",
+  "functor_id": "F_AXPY_F64_V1",
+  "abi": {
+    "abi_major": 1,
+    "abi_minor": 0,
+    "abi_version_string": "1.0.0",
+    "wrapper_version": "1.0.0",
+    "wrapper_source": "fortran-functors/src/magr_fortran.c",
+    "calling_convention": "cdecl",
+    "fortran_name_suffix": "_",
+    "fortran_hidden_char_len_type": "size_t",
+    "fortran_integer_kind": "int32"
+  },
+  "upstream": {
+    "project": "Netlib Reference BLAS (Basic Linear Algebra Subprograms)",
+    "version": "3.12.0",
+    "revision": "3.12.0",
+    "fortran_routine": "DAXPY",
+    "source_file": "fortran-functors/upstream/blas/daxpy.f",
+    "archive_url": "https://www.netlib.org/blas/blas.tgz",
+    "archive_sha256": "CCC41B5D088E50DB0030317AE9B0C9AF375710C1392ACAD1FE209602DA5A5AAD",
+    "source_sha256": null,
+    "source_sha256_status": "pending: filled in by tools/verify_upstream.ps1 at build time",
+    "modified_locally": false,
+    "license": "Netlib reference BLAS; freely redistributable, credit required, modifications must be renamed and commented",
+    "license_url": "https://www.netlib.org/blas/",
+    "license_acknowledgment": "Based upon work supported by NSF Grant ASC-9313958 and DOE Grant DE-FG03-94ER25219."
+  },
+  "signature": {
+    "result": "void",
+    "fortran": "SUBROUTINE DAXPY(N,DA,DX,INCX,DY,INCY)"
+  },
+  "semantics": "DY[i*INCY] := DA*DX[i*INCX] + DY[i*INCY] for i in [0,N)",
+  "arguments": [
+    {"position": 1, "name": "N", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 2, "name": "DA", "c_type": "const double*", "kind": "scalar_value"},
+    {"position": 3, "name": "DX", "c_type": "const double*", "kind": "array", "role": "input", "dtype": "f64"},
+    {"position": 4, "name": "INCX", "c_type": "const int32_t*", "kind": "scalar_stride"},
+    {"position": 5, "name": "DY", "c_type": "double*", "kind": "array", "role": "inout", "dtype": "f64"},
+    {"position": 6, "name": "INCY", "c_type": "const int32_t*", "kind": "scalar_stride"}
+  ],
+  "shape_rules": {
+    "DX": ["N"],
+    "DY": ["N"],
+    "lengths_must_match": true,
+    "increments": "INCX >= 1 and INCY >= 1 (see F_DOT_F64_V1 for the negative-increment policy)"
+  },
+  "quick_return": [
+    {"when": "N <= 0", "effect": "returns without modifying DY"}
+  ],
+  "storage_convention": "strided linear vectors.",
+  "preconditions": [
+    "DX is an f64 rank-1 input with positive stride.",
+    "DY is an f64 rank-1 writable view with positive stride and the same length as DX.",
+    "DY does not carry MAGR_ARRAY_F_READONLY.",
+    "DA is not NaN.",
+    "N fits in int32."
+  ],
+  "postconditions": [
+    "On OK, DY holds DA*DX + DY evaluated in that association.",
+    "DX is unmodified.",
+    "No XERBLA call occurs."
+  ],
+  "aliasing": {
+    "allowed": true,
+    "note": "DX and DY may alias exactly (in-place axpy on a single buffer). Partial overlap is not documented by DAXPY and is not supported: MAGR requires MAGR_ARRAY_F_MAY_ALIAS plus serialisation by the scheduler."
+  },
+  "thread_safety": "reentrant; no global state.",
+  "validation": {
+    "status_on_shape_error": "MAGR_STATUS_SHAPE_MISMATCH",
+    "status_on_stride_error": "MAGR_STATUS_STRIDE_UNSUPPORTED",
+    "status_on_dtype_error": "MAGR_STATUS_UNSUPPORTED"
+  },
+  "numerical_contract": {
+    "accumulation_order": "elementwise; DA*DX[i] is formed then added to DY[i]",
+    "fma_contraction_in_wrapper": "none",
+    "reproducibility_note": "The compiler may contract a*x+y into an FMA inside daxpy.f. Builds requiring bit-identity must pass -ffp-contract=off to the Fortran compiler; see docs/abi.md."
+  },
+  "binary": {
+    "digest_algorithm": "sha256",
+    "digest": null,
+    "digest_status": "pending: requires an actual compiled object"
+  },
+  "conformance": {
+    "test_ids": ["FC_AXPY_F64_BASIC", "FC_AXPY_F64_STRIDED", "FC_AXPY_F64_ALPHA_ZERO", "FC_AXPY_F64_ZERO_LEN", "FC_AXPY_F64_INPLACE", "FC_AXPY_F64_READONLY_REJECTED"],
+    "results": null,
+    "results_status": "pending: requires execution"
+  }
+}

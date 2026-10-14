@@ -1,0 +1,81 @@
+{
+  "descriptor_version": "1.0.0",
+  "functor_id": "F_NRM2_F64_V1",
+  "abi": {
+    "abi_major": 1,
+    "abi_minor": 0,
+    "abi_version_string": "1.0.0",
+    "wrapper_version": "1.0.0",
+    "wrapper_source": "fortran-functors/src/magr_fortran.c",
+    "calling_convention": "cdecl",
+    "fortran_name_suffix": "_",
+    "fortran_hidden_char_len_type": "size_t",
+    "fortran_integer_kind": "int32"
+  },
+  "upstream": {
+    "project": "Netlib Reference BLAS (Basic Linear Algebra Subprograms)",
+    "version": "3.12.0",
+    "revision": "3.12.0",
+    "fortran_routine": "DNRM2",
+    "source_file": "fortran-functors/upstream/blas/dnrm2.f90",
+    "note_on_source_language": "The vendored DNRM2 is Fortran 90 free-form (dnrm2.f90), unlike the F77 routines around it. It returns a REAL(wp) in a double register and takes no hidden character argument, so the C call shape is identical to the F77 form.",
+    "archive_url": "https://www.netlib.org/blas/blas.tgz",
+    "archive_sha256": "CCC41B5D088E50DB0030317AE9B0C9AF375710C1392ACAD1FE209602DA5A5AAD",
+    "source_sha256": null,
+    "source_sha256_status": "pending: filled in by tools/verify_upstream.ps1 at build time",
+    "modified_locally": false,
+    "license": "Netlib reference BLAS; freely redistributable, credit required, modifications must be renamed and commented",
+    "license_url": "https://www.netlib.org/blas/",
+    "license_acknowledgment": "Based upon work supported by NSF Grant ASC-9313958 and DOE Grant DE-FG03-94ER25219."
+  },
+  "signature": {
+    "result": "double",
+    "fortran": "real(wp) function DNRM2(N,X,INCX) with wp = kind(1.d0)"
+  },
+  "semantics": "result := sqrt(sum of squares of X[i*INCX]) computed with the Blue/Blue scaling algorithm so that neither overflow nor underflow of the intermediate squares is fatal.",
+  "arguments": [
+    {"position": 1, "name": "N", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 2, "name": "X", "c_type": "const double*", "kind": "array", "role": "input", "dtype": "f64"},
+    {"position": 3, "name": "INCX", "c_type": "const int32_t*", "kind": "scalar_stride"}
+  ],
+  "shape_rules": {
+    "X": ["N"],
+    "increments": "INCX >= 1 (see F_DOT_F64_V1 for the negative-increment policy)"
+  },
+  "quick_return": [
+    {"when": "N <= 0", "effect": "returns 0.0"}
+  ],
+  "storage_convention": "strided linear vector.",
+  "preconditions": [
+    "X is an f64 rank-1 input with positive stride.",
+    "N fits in int32."
+  ],
+  "postconditions": [
+    "On OK, the double written to the out parameter is the 2-norm, finite whenever no input is infinite and at least one input is nonzero.",
+    "X is unmodified.",
+    "If the upstream routine propagates a NaN from a degenerate rescaling, MAGR returns MAGR_STATUS_DIVISION_BY_ZERO and leaves the out parameter untouched."
+  ],
+  "aliasing": {"allowed": true, "note": "X is read-only."},
+  "thread_safety": "reentrant; no global state.",
+  "validation": {
+    "status_on_shape_error": "MAGR_STATUS_SHAPE_MISMATCH",
+    "status_on_stride_error": "MAGR_STATUS_STRIDE_UNSUPPORTED",
+    "status_on_dtype_error": "MAGR_STATUS_UNSUPPORTED",
+    "status_on_nan_result": "MAGR_STATUS_DIVISION_BY_ZERO"
+  },
+  "numerical_contract": {
+    "accuracy": "The scaling algorithm gives relative error bounded by O(n*eps) and never spuriously overflows for representable inputs.",
+    "fma_contraction_in_wrapper": "none",
+    "reproducibility_note": "Exact result depends on the rescaling thresholds (tsml/tbig) which are derived from RADIX and EPSILON at compile time; these are fixed by the Fortran standard's model parameters and are therefore stable across conforming compilers."
+  },
+  "binary": {
+    "digest_algorithm": "sha256",
+    "digest": null,
+    "digest_status": "pending: requires an actual compiled object"
+  },
+  "conformance": {
+    "test_ids": ["FC_NRM2_F64_BASIC", "FC_NRM2_F64_STRIDED", "FC_NRM2_F64_ZERO_LEN", "FC_NRM2_F64_SINGLETON", "FC_NRM2_F64_OVERFLOW_GUARD", "FC_NRM2_F64_UNDERFLOW_GUARD", "FC_NRM2_F64_ZERO_VECTOR"],
+    "results": null,
+    "results_status": "pending: requires execution"
+  }
+}

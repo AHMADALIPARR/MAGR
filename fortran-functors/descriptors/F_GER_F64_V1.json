@@ -1,0 +1,93 @@
+{
+  "descriptor_version": "1.0.0",
+  "functor_id": "F_GER_F64_V1",
+  "abi": {
+    "abi_major": 1,
+    "abi_minor": 0,
+    "abi_version_string": "1.0.0",
+    "wrapper_version": "1.0.0",
+    "wrapper_source": "fortran-functors/src/magr_fortran.c",
+    "calling_convention": "cdecl",
+    "fortran_name_suffix": "_",
+    "fortran_hidden_char_len_type": "size_t",
+    "fortran_integer_kind": "int32"
+  },
+  "upstream": {
+    "project": "Netlib Reference BLAS (Basic Linear Algebra Subprograms)",
+    "version": "3.12.0",
+    "revision": "3.12.0",
+    "fortran_routine": "DGER",
+    "source_file": "fortran-functors/upstream/blas/dger.f",
+    "archive_url": "https://www.netlib.org/blas/blas.tgz",
+    "archive_sha256": "CCC41B5D088E50DB0030317AE9B0C9AF375710C1392ACAD1FE209602DA5A5AAD",
+    "source_sha256": null,
+    "source_sha256_status": "pending: filled in by tools/verify_upstream.ps1 at build time",
+    "modified_locally": false,
+    "license": "Netlib reference BLAS; freely redistributable, credit required, modifications must be renamed and commented",
+    "license_url": "https://www.netlib.org/blas/",
+    "license_acknowledgment": "Based upon work supported by NSF Grant ASC-9313958 and DOE Grant DE-FG03-94ER25219."
+  },
+  "signature": {
+    "result": "void",
+    "fortran": "SUBROUTINE DGER(M,N,ALPHA,X,INCX,Y,INCY,A,LDA)"
+  },
+  "semantics": "A := ALPHA*X*Y^T + A (rank-one update). There is no transpose flag: GER always forms x*y^T, and GER2/HER exist for the conjugate forms.",
+  "arguments": [
+    {"position": 1, "name": "M", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 2, "name": "N", "c_type": "const int32_t*", "kind": "scalar_dim"},
+    {"position": 3, "name": "ALPHA", "c_type": "const double*", "kind": "scalar_value"},
+    {"position": 4, "name": "X", "c_type": "const double*", "kind": "array", "role": "input", "dtype": "f64"},
+    {"position": 5, "name": "INCX", "c_type": "const int32_t*", "kind": "scalar_stride"},
+    {"position": 6, "name": "Y", "c_type": "const double*", "kind": "array", "role": "input", "dtype": "f64"},
+    {"position": 7, "name": "INCY", "c_type": "const int32_t*", "kind": "scalar_stride"},
+    {"position": 8, "name": "A", "c_type": "double*", "kind": "array", "role": "inout", "layout": "column_major", "dtype": "f64"},
+    {"position": 9, "name": "LDA", "c_type": "const int32_t*", "kind": "scalar_dim"}
+  ],
+  "shape_rules": {
+    "A": ["M", "N"],
+    "X": ["M"],
+    "Y": ["N"],
+    "leading_dimensions": {"LDA": "LDA >= max(1,M)"}
+  },
+  "quick_return": [
+    {"when": "M <= 0 or N <= 0 or ALPHA == 0", "effect": "returns without modifying A"}
+  ],
+  "storage_convention": "column_major for A; strided linear for X and Y.",
+  "preconditions": [
+    "A is f64, rank 2, column_major, writable, strides [8, LDA*8].",
+    "X is an f64 rank-1 input of length M with positive stride.",
+    "Y is an f64 rank-1 input of length N with positive stride.",
+    "Declared capacity of A backs LDA*N doubles.",
+    "ALPHA is not NaN."
+  ],
+  "postconditions": [
+    "On OK, A(i,j) = ALPHA*X(i)*Y(j) + A_old(i,j) for all i in [0,M), j in [0,N).",
+    "X and Y are unmodified.",
+    "No XERBLA call occurs."
+  ],
+  "aliasing": {
+    "allowed": false,
+    "note": "DGER does not document behaviour when A aliases X or Y. In practice A(i,j) is written after X(i) and Y(j) are read for each (i,j) pair, which makes partial overlap order-dependent; MAGR does not rely on that."
+  },
+  "thread_safety": "reentrant; no global state.",
+  "validation": {
+    "status_on_shape_error": "MAGR_STATUS_SHAPE_MISMATCH",
+    "status_on_stride_error": "MAGR_STATUS_STRIDE_UNSUPPORTED",
+    "status_on_dtype_error": "MAGR_STATUS_UNSUPPORTED"
+  },
+  "numerical_contract": {
+    "accumulation_order": "A(i,j) := ALPHA*X(i)*Y(j) + A(i,j), one fused pass",
+    "fma_contraction_in_wrapper": "none",
+    "reproducibility_note": "Single-pass update, so ordering is fixed by the routine. The compiler may contract into an FMA; pass -ffp-contract=off for bit-identity."
+  },
+  "binary": {
+    "digest_algorithm": "sha256",
+    "digest": null,
+    "digest_status": "pending: requires an actual compiled object"
+  },
+  "conformance": {
+    "test_ids": ["FC_GER_F64_BASIC", "FC_GER_F64_ALPHA_ZERO_QUICK_RETURN", "FC_GER_F64_STRIDED", "FC_GER_F64_LD_GT_M", "FC_GER_F64_ZERO_DIM", "AB_COLUMN_MAJOR"],
+    "results": null,
+    "results_status": "pending: requires execution"
+  }
+}
